@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn Swedish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-inner">
+        <div>
+          <h1 class="app-title">Learn Swedish</h1>
+          <p class="app-subtitle" id="subtitle">Top 1,000 words · Spaced repetition</p>
+        </div>
+        <button class="btn-ghost" id="reset-btn">Reset</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Filter bar -->
+      <div class="filter-bar" id="filter-bar"></div>
+
+      <!-- Progress -->
+      <div class="progress-bar-wrap" id="progress-wrap" style="display:none">
+        <div class="progress-meta">
+          <span id="progress-label"></span>
+          <span class="progress-due" id="due-label" style="display:none"></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Card -->
+      <div class="card-scene" id="card-scene" style="display:none">
+        <div class="card-inner" id="card-inner">
+          <!-- Front -->
+          <div class="card-face card-face--front" id="card-front">
+            <div class="card-badge" id="front-badge"></div>
+            <div class="card-front-content">
+              <p class="card-word" id="front-word"></p>
+              <button class="audio-btn" id="audio-btn" title="Hear pronunciation" aria-label="Play pronunciation">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+              </button>
+            </div>
+            <span class="card-hint">tap to reveal</span>
+          </div>
+
+          <!-- Back -->
+          <div class="card-face card-face--back" id="card-back">
+            <div class="card-badge" id="back-badge"></div>
+            <p class="card-word card-word--sm" id="back-word-sv"></p>
+            <div class="card-divider"></div>
+            <div class="card-answer-wrap">
+              <p class="card-answer" id="back-word-en"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rating buttons (shown after flip) -->
+      <div class="ratings" id="ratings" style="display:none">
+        <p class="ratings-label">How well did you know this?</p>
+        <div class="ratings-grid" id="ratings-grid"></div>
+      </div>
+
+      <!-- Session complete -->
+      <div class="session-complete" id="session-complete" style="display:none">
+        <div class="complete-icon">🇸🇪</div>
+        <h2>Session complete!</h2>
+        <p id="complete-stats"></p>
+        <p class="complete-sub">Cards you found hard will appear again sooner.</p>
+        <button class="btn-primary" id="restart-btn">Practice again</button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="session-complete" id="empty-state" style="display:none">
+        <div class="complete-icon">📭</div>
+        <h2>No cards found</h2>
+        <p>No cards in this category.</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="sm2.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
