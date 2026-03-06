@@ -455,11 +455,54 @@ button:focus-visible {
   border-color: #d1d5db;
 }
 
+/* ── Sentence / cloze card variants ──────────────── */
+
+/* Smaller font for sentence-length text on card front/back */
+.card-word--sentence {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* The blank in a cloze card */
+.cloze-blank {
+  display: inline-block;
+  min-width: 72px;
+  padding: 1px 10px;
+  background: var(--accent-light);
+  border-bottom: 2.5px solid var(--accent);
+  border-radius: 4px 4px 0 0;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 0.9em;
+}
+
+/* The revealed answer word on cloze back */
+.cloze-answer {
+  display: inline;
+  background: #fef9c3;
+  color: #713f12;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* Slightly smaller answer text for longer sentences */
+.card-answer--sentence {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 480px) {
   .card-scene { height: clamp(300px, 48vh, 420px); }
   .card-face { padding: 24px; }
   .card-word { font-size: 28px; }
+  .card-word--sentence { font-size: 17px; }
   .card-answer { font-size: 18px; }
+  .card-answer--sentence { font-size: 16px; }
   .ratings-grid { grid-template-columns: repeat(2, 1fr); }
 }
