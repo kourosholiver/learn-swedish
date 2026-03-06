@@ -1,5 +1,7 @@
 // ── Constants ────────────────────────────────────────
-const SM2_KEY = 'swedish-sm2-state'
+const SM2_KEY        = 'swedish-sm2-state'
+const DAILY_KEY      = 'swedish-daily-new'
+const DAILY_NEW_LIMIT = 30
 
 const POS_META = {
   verb:        { label: 'Verb',        color: '#4f46e5', bg: '#eef2ff' },
@@ -26,12 +28,13 @@ const FILTER_GROUPS = [
 ]
 
 // ── State ────────────────────────────────────────────
-let sm2State     = loadSm2State()
+let sm2State      = loadSm2State()
+let dailyState    = loadDailyState()
 let selectedGroup = 'All'
-let queue        = []
-let currentIndex = 0
-let isFlipped    = false
-let sessionStats = { rated: 0 }
+let queue         = []
+let currentIndex  = 0
+let isFlipped     = false
+let sessionStats  = { rated: 0 }
 
 // ── Persistence ──────────────────────────────────────
 function loadSm2State() {
@@ -41,6 +44,25 @@ function loadSm2State() {
 
 function saveSm2State() {
   localStorage.setItem(SM2_KEY, JSON.stringify(sm2State))
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function loadDailyState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(DAILY_KEY))
+    if (raw && raw.date === todayStr()) return raw
+    // New day — reset
+    return { date: todayStr(), introduced: [] }
+  } catch {
+    return { date: todayStr(), introduced: [] }
+  }
+}
+
+function saveDailyState() {
+  localStorage.setItem(DAILY_KEY, JSON.stringify(dailyState))
 }
 
 // ── DOM refs ─────────────────────────────────────────
@@ -104,9 +126,38 @@ function wordsForGroup(groupKey) {
 }
 
 // ── Session ──────────────────────────────────────────
+function buildDailyQueue(words) {
+  const now = Date.now()
+  const introduced = new Set(dailyState.introduced)
+
+  // 1. Reviews: cards already seen and due now — always show all
+  const reviews = words
+    .filter(w => sm2State[w.id] && sm2State[w.id].nextDue <= now)
+    .sort((a, b) => sm2State[a.id].nextDue - sm2State[b.id].nextDue)
+
+  // 2. New cards (never seen)
+  const unseen = words.filter(w => !sm2State[w.id])
+
+  // Cards introduced earlier today (e.g. session restarted mid-day)
+  const resumedToday = unseen.filter(w => introduced.has(w.id))
+
+  // Fresh new cards up to remaining daily slots
+  const remaining = Math.max(0, DAILY_NEW_LIMIT - introduced.size)
+  const freshNew   = unseen
+    .filter(w => !introduced.has(w.id))
+    .slice(0, Math.max(0, remaining - resumedToday.length))
+
+  // Record all newly introduced cards for today
+  freshNew.forEach(w => introduced.add(w.id))
+  dailyState.introduced = [...introduced]
+  saveDailyState()
+
+  return [...reviews, ...resumedToday, ...freshNew]
+}
+
 function startSession() {
   const words = wordsForGroup(selectedGroup)
-  queue = buildQueue(words, sm2State)
+  queue = buildDailyQueue(words)
   currentIndex = 0
   isFlipped = false
   sessionStats = { rated: 0 }
@@ -115,8 +166,13 @@ function startSession() {
 }
 
 function updateSubtitle(words) {
-  const due = dueCount(words, sm2State)
-  $subtitle.textContent = `${words.length} words · ${due} due today`
+  const reviews  = dueCount(words, sm2State)
+  const newToday = dailyState.introduced.length
+  const parts = []
+  if (reviews > 0)  parts.push(`${reviews} review${reviews !== 1 ? 's' : ''} due`)
+  if (newToday > 0) parts.push(`${newToday}/${DAILY_NEW_LIMIT} new today`)
+  else              parts.push(`${DAILY_NEW_LIMIT} new words/day`)
+  $subtitle.textContent = parts.join(' · ')
 }
 
 // ── Rating buttons ───────────────────────────────────
@@ -147,7 +203,12 @@ function renderView() {
   }
 
   if (currentIndex >= queue.length) {
-    $completeStats.textContent = `You rated ${sessionStats.rated} card${sessionStats.rated !== 1 ? 's' : ''}.`
+    const newCount    = dailyState.introduced.length
+    const reviewCount = sessionStats.rated - newCount
+    const parts = []
+    if (newCount > 0)    parts.push(`${newCount} new word${newCount !== 1 ? 's' : ''}`)
+    if (reviewCount > 0) parts.push(`${reviewCount} review${reviewCount !== 1 ? 's' : ''}`)
+    $completeStats.textContent = `You studied ${parts.join(' and ')} today.`
     show($sessionComplete)
     return
   }
@@ -224,8 +285,10 @@ function handleRate(quality) {
 
 function handleReset() {
   if (!confirm('Reset all spaced repetition progress? This cannot be undone.')) return
-  sm2State = {}
+  sm2State   = {}
+  dailyState = { date: todayStr(), introduced: [] }
   saveSm2State()
+  saveDailyState()
   buildFilterBar()
   startSession()
 }
